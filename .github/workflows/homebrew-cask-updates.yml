@@ -10,6 +10,11 @@ jobs:
   bump-casks:
     runs-on: macos-latest
     steps:
+    - name: Fix Homebrew dependencies
+      run: |
+        brew update-reset
+        brew install-bundler-gems --groups=all
+    
     - name: Publish release
       uses: macauley/action-homebrew-bump-cask@v1
       with:
