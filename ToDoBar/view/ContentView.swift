@@ -40,20 +40,21 @@ struct ContentView: View {
             .scrollContentBackground(.hidden)
             
             HStack {
-            NewTodoField(
-                newTodo: $newTodo,
-                isTextFieldFocused: $isTextFieldFocused,
-                onAddTodo: {
-                    self.todos.append(Todo(text: newTodo))
-                    newTodo = ""
-                }
-            )
-            
-            Spacer()
-            
-            MenuView(todos: $todos, appDelegate: appDelegate)
+                NewTodoField(
+                    newTodo: $newTodo,
+                    isTextFieldFocused: $isTextFieldFocused,
+                    onAddTodo: {
+                        self.todos.append(Todo(text: newTodo))
+                        newTodo = ""
+                        (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
+                    }
+                )
+                
+                Spacer()
+                
+                MenuView(todos: $todos)
+            }
+            .padding(8)
         }
-        }
-        .padding(8)
     }
 }

@@ -9,10 +9,12 @@ import SwiftUI
 
 struct TodoItemButton: View {
     @Binding var isDone: Bool
+    var onToggle: (() -> Void)?
     
     var body: some View {
         Button(action: {
             isDone.toggle()
+            onToggle?()
         }) {
             Image(systemName: isDone ? "checkmark.circle" : "circle")
                 .resizable()

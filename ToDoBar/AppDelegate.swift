@@ -18,8 +18,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let hotKey = HotKey(key: .x, modifiers: [.control, .shift])  // Global hotke
     var aboutWindow: NSWindow!
     
-    @Default(.todos) var todos
-    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         let contentView = ContentView()
         
@@ -31,9 +29,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         guard let statusButton = statusBarItem.button else { return }
         statusButton.image = NSImage(systemSymbolName: "checklist", accessibilityDescription: nil)
+        statusButton.imagePosition = .imageLeft
         statusButton.action = #selector(togglePopover(_:))
         
         hotKey.keyUpHandler = { self.togglePopover(nil) }
+        
+        updateStatusBarButton()
         
         NSApp.setActivationPolicy(.accessory)
     }
@@ -76,10 +77,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         aboutWindow.center()
         aboutWindow.orderFrontRegardless()
     }
-
+    
     @objc
     func quit() {
         NSLog("User click Quit")
         NSApplication.shared.terminate(self)
+    }
+}
+
+extension AppDelegate {
+    @objc
+    func updateStatusBarButton() {
+        if Defaults[.showTaskCount] {
+            let unfinishedCount = Defaults[.todos].filter { !$0.isDone }.count
+            self.statusBarItem.button?.title = String(unfinishedCount)
+        } else {
+            statusBarItem.button?.title = ""
+        }
     }
 }

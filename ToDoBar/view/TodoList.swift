@@ -20,7 +20,11 @@ struct TodoList: View {
         List {
             ForEach($todos.indices, id: \.self) { index in
                 HStack {
-                    TodoItemButton(isDone: $todos[index].isDone)
+                    ReorderButton()
+
+                    TodoItemButton(isDone: $todos[index].isDone, onToggle: {
+                        (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
+                    })
                     
                     if editedItemIdx == index {
                         EditableTodoItem(
@@ -71,12 +75,13 @@ struct TodoList: View {
                     }
                     
                     Spacer()
-                    
-                    ReorderButton()
-                    
+                                        
                     DeleteButton(
                         isHovered: hoverItemIdx == index,
-                        onClick: { todos.remove(at: index) },
+                        onClick: {
+                            todos.remove(at: index)
+                            (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
+                        },
                         onHover: { isHovered in
                             if isHovered {
                                 withAnimation {

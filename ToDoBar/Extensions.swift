@@ -10,4 +10,5 @@ import Defaults
 
 extension Defaults.Keys {
     static let todos = Key<Array<Todo>>("todos", default: [])
+    static let showTaskCount = Key<Bool>("showTaskCount", default: false)
 }

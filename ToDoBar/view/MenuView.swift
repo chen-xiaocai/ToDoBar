@@ -7,30 +7,37 @@
 
 import SwiftUI
 import LaunchAtLogin
+import Defaults
 
 struct MenuView: View {
     @Binding var todos: [Todo]
-    var appDelegate: AppDelegate
+    @Default(.showTaskCount) var showTaskCount
     
     var body: some View {
         Menu {
             Button(action: {
                 todos = todos.filter{ !$0.isDone }
+                (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
             }) {
                 Label("Clear Done", systemImage: "eyeglasses")
             }
             Button(action: {
                 todos.removeAll()
+                (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
             }) {
                 Label("Clear All", systemImage: "book")
             }
             Divider()
             LaunchAtLogin.Toggle()
+            Toggle("Show Task Count", isOn: $showTaskCount)
+                .onChange(of: showTaskCount) { _ in
+                    (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
+                }
             Divider()
-            Button(action: { appDelegate.openAboutWindow(nil) } ) {
+            Button(action: { (NSApplication.shared.delegate as? AppDelegate)?.openAboutWindow(nil) } ) {
                 Label("About ToDoBar", systemImage: "books.vertical")
             }
-            Button(action: { appDelegate.quit() }) {
+            Button(action: { (NSApplication.shared.delegate as? AppDelegate)?.quit() }) {
                 Label("Quit", systemImage: "books.vertical")
             }
         } label: {
