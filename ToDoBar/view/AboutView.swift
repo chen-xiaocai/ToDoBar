@@ -15,12 +15,12 @@ struct AboutView: View {
 
         VStack {
             Image(nsImage: NSImage(named: "AppIcon")!)
-            Text("ToDoBar").font(.title)
-            Text("by Pavel Makhov").font(.caption)
+            Text("ToDoBar Sync").font(.title)
+            Text("ToDoBar 的局域网同步分支").font(.caption)
             Text("version " + currentVersion).font(.footnote)
             Divider()
             Button(action: {
-                openURL(URL(string:"https://menubar-apps.github.io/#todobar")!)
+                openURL(URL(string:"https://github.com/chen-xiaocai/ToDoBar")!)
             }) {
                 HStack {
                     Image(systemName: "house.fill")
@@ -37,7 +37,7 @@ struct AboutView: View {
             )
             
             Button(action: {
-                openURL(URL(string:"https://github.com/menubar-apps/ToDoBar/issues/new?template=feature_request.md")!)
+                openURL(URL(string:"https://github.com/chen-xiaocai/ToDoBar/issues")!)
             }) {
                 HStack {
                     Image(systemName: "star.fill")
@@ -53,7 +53,7 @@ struct AboutView: View {
             )
             
             Button(action: {
-                openURL(URL(string:"https://github.com/menubar-apps/ToDoBar/issues/new?template=bug_report.md")!)
+                openURL(URL(string:"https://github.com/chen-xiaocai/ToDoBar/issues")!)
             }) {
                 HStack {
                     Image(systemName: "ladybug.fill")

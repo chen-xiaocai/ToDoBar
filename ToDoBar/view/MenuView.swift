@@ -7,11 +7,10 @@
 
 import SwiftUI
 import LaunchAtLogin
-import Defaults
 
 struct MenuView: View {
     @Binding var todos: [Todo]
-    @Default(.showTaskCount) var showTaskCount
+    @AppStorage("showTaskCount") var showTaskCount = false
     
     var body: some View {
         Menu {
@@ -28,6 +27,9 @@ struct MenuView: View {
                 Label("Clear All", systemImage: "book")
             }
             Divider()
+            Button(action: { (NSApplication.shared.delegate as? AppDelegate)?.openSyncWindow(nil) }) {
+                Label("手机同步", systemImage: "iphone.and.arrow.forward")
+            }
             LaunchAtLogin.Toggle()
             Toggle("Show Task Count", isOn: $showTaskCount)
                 .onChange(of: showTaskCount) { _ in
@@ -35,7 +37,7 @@ struct MenuView: View {
                 }
             Divider()
             Button(action: { (NSApplication.shared.delegate as? AppDelegate)?.openAboutWindow(nil) } ) {
-                Label("About ToDoBar", systemImage: "books.vertical")
+                Label("About ToDoBar Sync", systemImage: "books.vertical")
             }
             Button(action: { (NSApplication.shared.delegate as? AppDelegate)?.quit() }) {
                 Label("Quit", systemImage: "books.vertical")

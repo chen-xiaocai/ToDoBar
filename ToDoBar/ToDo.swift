@@ -6,9 +6,17 @@
 //
 
 import Foundation
-import Defaults
 
-struct Todo: Codable, Defaults.Serializable {
-    let text: String
+struct Todo: Codable, Identifiable, Equatable {
+    let id: UUID
+    var text: String
     var isDone: Bool = false
+    let sourceID: String?
+
+    init(id: UUID = UUID(), text: String, isDone: Bool = false, sourceID: String? = nil) {
+        self.id = id
+        self.text = text
+        self.isDone = isDone
+        self.sourceID = sourceID
+    }
 }

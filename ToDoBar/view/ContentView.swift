@@ -6,14 +6,9 @@
 //
 
 import SwiftUI
-import Defaults
-import LaunchAtLogin
 
 struct ContentView: View {
-    
-    @Default(.todos) var todos
-    
-    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    @EnvironmentObject var store: TodoStore
     
     @State private var text: String = ""
     @State private var editedItem: String = ""
@@ -30,7 +25,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             TodoList(
-                todos: $todos,
+                todos: $store.todos,
                 editedItemIdx: $editedItemIdx,
                 hoverIdx: $hoverIdx,
                 hoverItemIdx: $hoverItemIdx,
@@ -44,7 +39,9 @@ struct ContentView: View {
                     newTodo: $newTodo,
                     isTextFieldFocused: $isTextFieldFocused,
                     onAddTodo: {
-                        self.todos.append(Todo(text: newTodo))
+                        let value = newTodo.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !value.isEmpty else { return }
+                        self.store.todos.append(Todo(text: value))
                         newTodo = ""
                         (NSApplication.shared.delegate as? AppDelegate)?.updateStatusBarButton()
                     }
@@ -52,7 +49,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                MenuView(todos: $todos)
+                MenuView(todos: $store.todos)
             }
             .padding(8)
         }

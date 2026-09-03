@@ -8,7 +8,7 @@
 import Cocoa
 import SwiftUI
 import HotKey
-import Defaults
+import Combine
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -17,9 +17,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarItem: NSStatusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let hotKey = HotKey(key: .x, modifiers: [.control, .shift])  // Global hotke
     var aboutWindow: NSWindow!
+    var syncWindow: NSWindow!
+    let store = TodoStore()
+    lazy var syncServer = SyncServer(store: store)
+    private var cancellables = Set<AnyCancellable>()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        let contentView = ContentView()
+        let contentView = ContentView().environmentObject(store)
         
         let popover = NSPopover()
         popover.contentSize = NSSize(width: 400, height: 400)
@@ -33,10 +37,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusButton.action = #selector(togglePopover(_:))
         
         hotKey.keyUpHandler = { self.togglePopover(nil) }
+        store.$todos.sink { [weak self] _ in self?.updateStatusBarButton() }.store(in: &cancellables)
+        syncServer.start()
         
         updateStatusBarButton()
         
         NSApp.setActivationPolicy(.accessory)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        syncServer.stop()
     }
     
     @objc func togglePopover(_ sender: AnyObject?) {
@@ -77,6 +87,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         aboutWindow.center()
         aboutWindow.orderFrontRegardless()
     }
+
+    @objc func openSyncWindow(_: NSStatusBarButton?) {
+        if syncWindow != nil { syncWindow.close() }
+        syncWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 430, height: 560),
+            styleMask: [.closable, .titled], backing: .buffered, defer: false
+        )
+        syncWindow.title = "ToDoBar Sync"
+        syncWindow.contentView = NSHostingView(rootView: SyncSettingsView(server: syncServer))
+        syncWindow.center()
+        syncWindow.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
     
     @objc
     func quit() {
@@ -88,8 +111,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate {
     @objc
     func updateStatusBarButton() {
-        if Defaults[.showTaskCount] {
-            let unfinishedCount = Defaults[.todos].filter { !$0.isDone }.count
+        if UserDefaults.standard.bool(forKey: "showTaskCount") {
+            let unfinishedCount = store.todos.filter { !$0.isDone }.count
             self.statusBarItem.button?.title = String(unfinishedCount)
         } else {
             statusBarItem.button?.title = ""

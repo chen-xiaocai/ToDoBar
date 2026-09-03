@@ -32,18 +32,18 @@ struct TodoList: View {
                             isTodoItemFocused: $isTodoItemFocused,
                             onSubmit: {
                                 editedItemIdx = -1
-                                todos[index] = Todo(text: editedItem, isDone: todos[index].isDone)
+                                todos[index].text = editedItem
                                 isTodoItemFocused = false
                             },
                             onExit: {
                                 editedItemIdx = -1
-                                todos[index] = Todo(text: editedItem, isDone: todos[index].isDone)
+                                todos[index].text = editedItem
                                 isTodoItemFocused = false
                             },
                             onFocusChange: { isFocused in
                                 if !isFocused {
                                     editedItemIdx = -1
-                                    todos[index] = Todo(text: editedItem, isDone: todos[index].isDone)
+                                    todos[index].text = editedItem
                                 }
                             }
                         )

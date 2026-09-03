@@ -1,0 +1,54 @@
+name: ToDoBarSync
+options:
+  bundleIdPrefix: com.chenxiaocai
+  deploymentTarget:
+    macOS: "13.0"
+packages:
+  HotKey:
+    url: https://github.com/soffes/HotKey
+    revision: c13662730cb5bc28de4a799854bbb018a90649bf
+  LaunchAtLogin:
+    url: https://github.com/sindresorhus/LaunchAtLogin-Modern
+    revision: 9c41991631605c8ccfe0347bbcb5c659169f2ec5
+targets:
+  ToDoBarSync:
+    type: application
+    platform: macOS
+    sources:
+      - path: ToDoBar
+        excludes:
+          - Base.lproj/Main.storyboard
+          - ToDoBar.entitlements
+    dependencies:
+      - package: HotKey
+      - package: LaunchAtLogin
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.chenxiaocai.ToDoBarSync
+        PRODUCT_NAME: ToDoBar Sync
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: 用于在家庭局域网内接收手机上的待办事项。
+        INFOPLIST_KEY_NSBonjourServices: ["_todobar-sync._tcp"]
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        ENABLE_HARDENED_RUNTIME: NO
+        SWIFT_VERSION: 5.0
+  ToDoBarSyncTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [ToDoBarSyncTests]
+    dependencies:
+      - target: ToDoBarSync
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.chenxiaocai.ToDoBarSyncTests
+schemes:
+  ToDoBarSync:
+    build:
+      targets:
+        ToDoBarSync: all
+        ToDoBarSyncTests: [test]
+    test:
+      targets: [ToDoBarSyncTests]
