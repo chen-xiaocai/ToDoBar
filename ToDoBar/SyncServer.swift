@@ -41,7 +41,8 @@ final class SyncServer: ObservableObject {
         connection.start(queue: queue)
         receiveExactly(4, connection: connection) { [weak self] header in
             guard let self, header.count == 4 else { connection.cancel(); return }
-            let length = header.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+            let bytes = [UInt8](header)
+            let length = (UInt32(bytes[0]) << 24) | (UInt32(bytes[1]) << 16) | (UInt32(bytes[2]) << 8) | UInt32(bytes[3])
             guard length > 0, length <= maximumFrameBytes else { connection.cancel(); return }
             self.receiveExactly(Int(length), connection: connection) { payload in
                 DispatchQueue.main.async { self.handle(payload, connection: connection) }
@@ -75,11 +76,11 @@ final class SyncServer: ObservableObject {
                 let session = try pairing.pair(deviceID: request.deviceID, deviceName: request.deviceName)
                 pairedDeviceName = request.deviceName
                 try send(PairResponse(sessionKey: session.base64EncodedString()), kind: "pair_response", deviceID: request.deviceID, key: pending, connection: connection)
+                pairing.confirmAuthenticatedSession()
             case "sync":
                 guard envelope.deviceID == pairing.state.deviceID, let key = pairing.state.sessionKey else { throw SyncError.unauthorized }
                 let request = try SyncCrypto.open(SyncRequest.self, envelope: envelope, key: key)
                 let ids = store.receive(request.items)
-                pairing.confirmAuthenticatedSession()
                 try send(SyncResponse(acknowledgedIDs: ids), kind: "sync_response", deviceID: envelope.deviceID, key: key, connection: connection)
                 NSLog("Sync accepted deviceID=%@ itemCount=%d acknowledgedCount=%d", envelope.deviceID ?? "", request.items.count, ids.count)
             case "unbind":

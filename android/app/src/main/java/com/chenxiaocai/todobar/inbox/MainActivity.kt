@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -46,6 +46,10 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
         private set
     var message by mutableStateOf<String?>(null)
         private set
+
+    init {
+        if (pairing != null && app.database.pending().isNotEmpty()) SyncScheduler.enqueue(app)
+    }
 
     fun add(value: String) {
         runCatching { app.database.add(value); SyncScheduler.enqueue(app) }
@@ -99,7 +103,7 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
     val context = LocalContext.current
     var scanning by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        scanning = result[Manifest.permission.CAMERA] == true && result[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        scanning = result.isNotEmpty() && result.values.all { it }
         if (!scanning) android.widget.Toast.makeText(context, "扫码和读取家庭 Wi‑Fi 需要相机与位置权限", android.widget.Toast.LENGTH_LONG).show()
     }
     Surface(Modifier.fillMaxSize()) {
@@ -107,7 +111,12 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
             QrScanner(onResult = { scanning = false; vm.pair(it) }, onCancel = { scanning = false })
         } else if (vm.pairing == null) {
             PairScreen(message = vm.message, onScan = {
-                val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                val permissions = buildList {
+                    add(Manifest.permission.CAMERA)
+                    add(Manifest.permission.ACCESS_FINE_LOCATION)
+                    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.NEARBY_WIFI_DEVICES)
+                }.toTypedArray()
                 if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) scanning = true else permissionLauncher.launch(permissions)
             })
         } else {
