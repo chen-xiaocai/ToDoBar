@@ -39,7 +39,7 @@ object SyncScheduler {
         val state = (context.applicationContext as InboxApplication).secureStore.load() ?: return
         val specifier = WifiNetworkSpecifier.Builder().setSsid(state.ssid).build()
         val request = NetworkRequest.Builder().addTransportType(android.net.NetworkCapabilities.TRANSPORT_WIFI).setNetworkSpecifier(specifier).build()
-        val constraints = Constraints.Builder().setRequiredNetworkRequest(request, NetworkType.UNMETERED).build()
+        val constraints = Constraints.Builder().setRequiredNetworkRequest(request, NetworkType.CONNECTED).build()
         val work = OneTimeWorkRequestBuilder<SyncWorker>().setConstraints(constraints).build()
         WorkManager.getInstance(context).enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, work)
         Log.i("ToDoBarInbox", "One-shot sync enqueued workID=${work.id} ssid=${state.ssid}")

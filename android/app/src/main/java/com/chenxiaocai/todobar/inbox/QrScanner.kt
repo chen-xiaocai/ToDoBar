@@ -38,8 +38,19 @@ import java.util.concurrent.atomic.AtomicBoolean
                 val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
                 analysis.setAnalyzer(executor) { image ->
                     try {
-                        val buffer = image.planes[0].buffer
-                        val bytes = ByteArray(buffer.remaining()); buffer.get(bytes)
+                        val plane = image.planes[0]
+                        val buffer = plane.buffer
+                        val bytes = ByteArray(image.width * image.height)
+                        if (plane.rowStride == image.width && plane.pixelStride == 1) {
+                            buffer.get(bytes, 0, bytes.size)
+                        } else {
+                            val row = ByteArray(plane.rowStride)
+                            for (y in 0 until image.height) {
+                                val count = minOf(plane.rowStride, buffer.remaining())
+                                buffer.get(row, 0, count)
+                                for (x in 0 until image.width) bytes[y * image.width + x] = row[x * plane.pixelStride]
+                            }
+                        }
                         val source = PlanarYUVLuminanceSource(bytes, image.width, image.height, 0, 0, image.width, image.height, false)
                         val value = runCatching { MultiFormatReader().decode(BinaryBitmap(HybridBinarizer(source))).text }.getOrNull()
                         if (value != null && finished.compareAndSet(false, true)) ContextCompat.getMainExecutor(ctx).execute { onResult(value) }
