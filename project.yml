@@ -25,7 +25,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.chenxiaocai.ToDoBarSync
-        PRODUCT_NAME: ToDoBar Sync
+        PRODUCT_NAME: ToDoBarSync
+        INFOPLIST_KEY_CFBundleDisplayName: ToDoBar Sync
         MARKETING_VERSION: 0.1.0
         CURRENT_PROJECT_VERSION: 1
         INFOPLIST_KEY_LSUIElement: YES

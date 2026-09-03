@@ -107,7 +107,7 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
             QrScanner(onResult = { scanning = false; vm.pair(it) }, onCancel = { scanning = false })
         } else if (vm.pairing == null) {
             PairScreen(message = vm.message, onScan = {
-                val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION)
+                val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
                 if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) scanning = true else permissionLauncher.launch(permissions)
             })
         } else {
