@@ -10,7 +10,6 @@ import SwiftUI
 import HotKey
 import Combine
 
-@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     var popover: NSPopover!
