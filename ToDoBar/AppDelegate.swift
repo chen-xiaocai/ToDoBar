@@ -16,7 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarItem: NSStatusItem?
     let hotKey = HotKey(key: .x, modifiers: [.control, .shift])  // Global hotke
     var aboutWindow: NSWindow!
-    var syncWindow: NSWindow!
+    private var syncWindowController: NSWindowController?
     let store = TodoStore()
     lazy var syncServer = SyncServer(store: store)
     private var cancellables = Set<AnyCancellable>()
@@ -99,16 +99,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         aboutWindow.orderFrontRegardless()
     }
 
-    @objc func openSyncWindow(_: NSStatusBarButton?) {
-        if syncWindow != nil { syncWindow.close() }
-        syncWindow = NSWindow(
+    @objc func openSyncWindow(_: Any?) {
+        if let window = syncWindowController?.window {
+            window.makeKeyAndOrderFront(nil)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let syncWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 430, height: 560),
             styleMask: [.closable, .titled], backing: .buffered, defer: false
         )
+        syncWindow.isReleasedWhenClosed = false
         syncWindow.title = "ToDoBar Sync"
         syncWindow.contentView = NSHostingView(rootView: SyncSettingsView(server: syncServer))
+        let controller = NSWindowController(window: syncWindow)
+        syncWindowController = controller
         syncWindow.center()
-        syncWindow.makeKeyAndOrderFront(nil)
+        controller.showWindow(self)
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
     

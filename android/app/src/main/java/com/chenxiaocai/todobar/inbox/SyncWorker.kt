@@ -1,8 +1,7 @@
 package com.chenxiaocai.todobar.inbox
 
 import android.content.Context
-import android.net.NetworkRequest
-import android.net.wifi.WifiNetworkSpecifier
+import android.net.wifi.WifiManager
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -21,6 +20,8 @@ class SyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWork
         val items = application.database.pending()
         if (items.isEmpty()) return@withContext Result.success()
         try {
+            val currentSSID = applicationContext.getSystemService(WifiManager::class.java).connectionInfo.ssid.trim('"')
+            check(currentSSID == state.ssid) { "Current Wi-Fi does not match the paired home Wi-Fi" }
             val endpoint = BonjourDiscovery(applicationContext).find() ?: error("ToDoBar Sync service was not found")
             val acknowledged = SyncClient(endpoint, network).sync(state, items)
             application.database.acknowledge(acknowledged)
@@ -37,9 +38,7 @@ object SyncScheduler {
     private const val WORK_NAME = "home-wifi-single-sync"
     fun enqueue(context: Context) {
         val state = (context.applicationContext as InboxApplication).secureStore.load() ?: return
-        val specifier = WifiNetworkSpecifier.Builder().setSsid(state.ssid).build()
-        val request = NetworkRequest.Builder().addTransportType(android.net.NetworkCapabilities.TRANSPORT_WIFI).setNetworkSpecifier(specifier).build()
-        val constraints = Constraints.Builder().setRequiredNetworkRequest(request, NetworkType.CONNECTED).build()
+        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val work = OneTimeWorkRequestBuilder<SyncWorker>().setConstraints(constraints).build()
         WorkManager.getInstance(context).enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, work)
         Log.i("ToDoBarInbox", "One-shot sync enqueued workID=${work.id} ssid=${state.ssid}")

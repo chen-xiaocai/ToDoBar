@@ -39,7 +39,9 @@ class SecureStore(context: Context) {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val encrypted = cipher.doFinal(json.toString().toByteArray())
-        preferences.edit().putString("state", Base64.encodeToString(cipher.iv + encrypted, Base64.NO_WRAP)).apply()
+        check(preferences.edit().putString("state", Base64.encodeToString(cipher.iv + encrypted, Base64.NO_WRAP)).commit()) {
+            "Pairing state could not be persisted"
+        }
         Log.i("ToDoBarInbox", "Pairing state saved serverID=${state.serverID} deviceID=${state.deviceID} ssid=${state.ssid}")
     }
 
