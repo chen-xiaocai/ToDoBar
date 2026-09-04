@@ -48,6 +48,16 @@ struct ContentView: View {
                 )
                 
                 Spacer()
+
+                Button(action: {
+                    (NSApplication.shared.delegate as? AppDelegate)?.openSyncWindow(nil)
+                }) {
+                    Label("手机同步", systemImage: "iphone.and.arrow.forward")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help("打开手机同步与配对二维码")
                 
                 MenuView(todos: $store.todos)
             }

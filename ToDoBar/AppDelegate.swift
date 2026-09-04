@@ -43,6 +43,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateStatusBarButton()
         
         NSApp.setActivationPolicy(.accessory)
+
+        let initialPairingWindowKey = "didPresentInitialPairingWindow"
+        if syncServer.pairedDeviceName == nil,
+           !UserDefaults.standard.bool(forKey: initialPairingWindowKey) {
+            UserDefaults.standard.set(true, forKey: initialPairingWindowKey)
+            DispatchQueue.main.async { [weak self] in
+                self?.openSyncWindow(nil)
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
