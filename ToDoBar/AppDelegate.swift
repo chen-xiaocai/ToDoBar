@@ -14,7 +14,7 @@ import Combine
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     var popover: NSPopover!
-    var statusBarItem: NSStatusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    var statusBarItem: NSStatusItem?
     let hotKey = HotKey(key: .x, modifiers: [.control, .shift])  // Global hotke
     var aboutWindow: NSWindow!
     var syncWindow: NSWindow!
@@ -23,6 +23,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var cancellables = Set<AnyCancellable>()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
+
         let contentView = ContentView().environmentObject(store)
         
         let popover = NSPopover()
@@ -31,10 +33,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(rootView: contentView)
         self.popover = popover
         
-        guard let statusButton = statusBarItem.button else { return }
-        statusButton.image = NSImage(systemSymbolName: "checklist", accessibilityDescription: nil)
-        statusButton.imagePosition = .imageLeft
-        statusButton.action = #selector(togglePopover(_:))
+        let statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        self.statusBarItem = statusBarItem
+        if let statusButton = statusBarItem.button {
+            statusButton.image = NSImage(systemSymbolName: "checklist", accessibilityDescription: "ToDoBar Sync")
+            statusButton.imagePosition = .imageLeft
+            statusButton.target = self
+            statusButton.action = #selector(togglePopover(_:))
+        } else {
+            NSLog("Status item button unavailable")
+        }
         
         hotKey.keyUpHandler = { self.togglePopover(nil) }
         store.$todos.sink { [weak self] _ in self?.updateStatusBarButton() }.store(in: &cancellables)
@@ -42,12 +50,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         updateStatusBarButton()
         
-        NSApp.setActivationPolicy(.accessory)
-
-        let initialPairingWindowKey = "didPresentInitialPairingWindow"
-        if syncServer.pairedDeviceName == nil,
-           !UserDefaults.standard.bool(forKey: initialPairingWindowKey) {
-            UserDefaults.standard.set(true, forKey: initialPairingWindowKey)
+        if syncServer.pairedDeviceName == nil {
             DispatchQueue.main.async { [weak self] in
                 self?.openSyncWindow(nil)
             }
@@ -59,7 +62,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func togglePopover(_ sender: AnyObject?) {
-        if let button = self.statusBarItem.button {
+        if let button = self.statusBarItem?.button {
             if self.popover.isShown {
                 self.popover.performClose(sender)
             } else {
@@ -122,9 +125,9 @@ extension AppDelegate {
     func updateStatusBarButton() {
         if UserDefaults.standard.bool(forKey: "showTaskCount") {
             let unfinishedCount = store.todos.filter { !$0.isDone }.count
-            self.statusBarItem.button?.title = String(unfinishedCount)
+            self.statusBarItem?.button?.title = String(unfinishedCount)
         } else {
-            statusBarItem.button?.title = ""
+            statusBarItem?.button?.title = ""
         }
     }
 }
