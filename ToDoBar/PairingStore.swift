@@ -24,8 +24,13 @@ final class PairingStore {
 
     var qrString: String? {
         guard state.deviceID == nil, let key = state.pendingKey else { return nil }
-        let encoded = key.base64EncodedString()
-        return "todobar-sync://pair?v=1&server=\(state.serverID)&key=\(encoded.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? encoded)"
+        let encoded = Self.encodeQueryValue(key.base64EncodedString())
+        return "todobar-sync://pair?v=1&server=\(state.serverID)&key=\(encoded)"
+    }
+
+    static func encodeQueryValue(_ value: String) -> String {
+        let unreserved = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
+        return value.addingPercentEncoding(withAllowedCharacters: unreserved) ?? value
     }
 
     func pair(deviceID: String, deviceName: String) throws -> Data {
